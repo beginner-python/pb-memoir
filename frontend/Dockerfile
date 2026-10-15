@@ -1,0 +1,8 @@
+# 開発用イメージ。本番は Vercel にデプロイするためコンテナ化しない。
+FROM node:24-slim
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+EXPOSE 3000
+CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
