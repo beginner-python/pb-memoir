@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     openai_chat_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
     embedding_dim: int = 1536
+    chunk_size: int = 800
+    chunk_overlap: int = 120
 
     # 公開デモでは True。書き込み系 API を 403 にする
     read_only: bool = False
