@@ -45,6 +45,23 @@ services:
     depends_on:
       - backend
 
+  # E2E テスト(Playwright)。通常起動には含めず、--profile e2e のときだけ使う。
+  # 実行: docker compose --profile e2e run --rm e2e
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.64.1-noble   # @playwright/test と同じバージョンにする
+    profiles: ["e2e"]
+    working_dir: /app
+    command: npx playwright test
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    environment:
+      E2E_BASE_URL: http://frontend:3000
+      CI: "${CI:-}"
+    depends_on:
+      - frontend
+      - backend
+
 volumes:
   pgdata:
   frontend_node_modules:

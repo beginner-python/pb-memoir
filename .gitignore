@@ -11,6 +11,8 @@ __pycache__/
 .ruff_cache/
 
 # node
+frontend/test-results/
+frontend/playwright-report/
 node_modules/
 .next/
 out/

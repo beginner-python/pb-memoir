@@ -35,6 +35,9 @@ docker compose exec backend uv run pytest                      # バックエン
 docker compose exec backend uv run alembic revision --autogenerate -m "..."
 docker compose exec backend uv run alembic upgrade head
 docker compose exec frontend npm run lint
+docker compose exec frontend npm run typecheck
+docker compose exec frontend npm test                         # フロントのテスト (Vitest)
+docker compose --profile e2e run --rm e2e                    # E2E テスト (Playwright、起動中のスタックに対して実行)
 ```
 
 ## 開発状況
@@ -42,6 +45,6 @@ docker compose exec frontend npm run lint
 - [x] フェーズ 0: リポジトリ整備
 - [x] フェーズ 1: バックエンド中核(日記 CRUD・埋め込み)
 - [x] フェーズ 2: 検索と対話(LLM による時期抽出・SSE)
-- [ ] フェーズ 3: フロントエンド
+- [x] フェーズ 3: フロントエンド
 - [ ] フェーズ 4: 架空データ・読み取り専用モード・OpenAI モード
 - [ ] フェーズ 5: 公開(Supabase / Render / Vercel / CI)
