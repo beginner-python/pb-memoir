@@ -1,5 +1,6 @@
 import uuid
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -36,3 +37,57 @@ class EntryOut(BaseModel):
 class EntryList(BaseModel):
     items: list[EntryOut]
     total: int
+
+
+# ---- 検索・対話 ----------------------------------------------------------------
+
+QUESTION_MAX = 1_000
+HISTORY_MAX = 10
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4_000)
+
+
+class SearchRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=QUESTION_MAX)
+
+
+class ChatRequest(SearchRequest):
+    history: list[ChatMessage] = Field(default_factory=list, max_length=HISTORY_MAX)
+
+
+class DateRangeOut(BaseModel):
+    """解釈した時期。JSON では from / to というキー名で返す。"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    date_from: date = Field(serialization_alias="from")
+    date_to: date = Field(serialization_alias="to")
+    label: str
+    source: Literal["llm", "cache"]
+    as_of: date  # 解釈の基準日。llm なら今日、cache なら生成日
+
+
+class SourceItem(BaseModel):
+    index: int
+    entry_id: uuid.UUID
+    entry_date: date
+    content: str
+    similarity: float
+
+
+class SearchResult(BaseModel):
+    date_range: DateRangeOut | None
+    widened: bool
+    items: list[SourceItem]
+
+
+class SuggestionOut(BaseModel):
+    question: str
+
+
+class SuggestionsOut(BaseModel):
+    generated_at: date
+    items: list[SuggestionOut]

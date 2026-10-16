@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,6 +21,9 @@ class Settings(BaseSettings):
     embedding_dim: int = 1536
     chunk_size: int = 800
     chunk_overlap: int = 120
+    top_k: int = 5
+    timezone: str = "Asia/Tokyo"  # 「今日」の基準
+    suggestions_path: str = str(Path(__file__).parent / "data" / "suggestions.json")
 
     # 公開デモでは True。書き込み系 API を 403 にする
     read_only: bool = False

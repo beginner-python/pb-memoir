@@ -41,7 +41,7 @@ docker compose exec frontend npm run lint
 
 - [x] フェーズ 0: リポジトリ整備
 - [x] フェーズ 1: バックエンド中核(日記 CRUD・埋め込み)
-- [ ] フェーズ 2: 検索と対話(日付パーサー・SSE)
+- [x] フェーズ 2: 検索と対話(LLM による時期抽出・SSE)
 - [ ] フェーズ 3: フロントエンド
 - [ ] フェーズ 4: 架空データ・読み取り専用モード・OpenAI モード
 - [ ] フェーズ 5: 公開(Supabase / Render / Vercel / CI)
