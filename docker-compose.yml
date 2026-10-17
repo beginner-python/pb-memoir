@@ -45,8 +45,65 @@ services:
     depends_on:
       - backend
 
-  # E2E テスト(Playwright)。通常起動には含めず、--profile e2e のときだけ使う。
-  # 実行: docker compose --profile e2e run --rm e2e
+  # ---- E2E テスト用の独立したスタック(--profile e2e のときだけ) ----------------------
+  # 開発用 DB には触れず、使い捨ての DB にサンプル日記を投入した状態でテストする。
+  #   実行:   docker compose --profile e2e run --rm e2e
+  #   片付け: docker compose rm -sf db-e2e backend-e2e frontend-e2e
+  db-e2e:
+    image: pgvector/pgvector:pg16
+    profiles: ["e2e"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: memoir_e2e
+    tmpfs:
+      - /var/lib/postgresql/data   # 永続化しない。コンテナを消せば消える
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d memoir_e2e"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend-e2e:
+    build: ./backend
+    profiles: ["e2e"]
+    command: >
+      sh -c "uv run alembic upgrade head &&
+             uv run python -m scripts.seed --reset --yes &&
+             uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db-e2e:5432/memoir_e2e
+      LLM_PROVIDER: mock          # API を呼ばない。backend/.env の値より優先される
+      READ_ONLY: "false"
+      APP_ENV: local
+    ports:
+      - "8001:8000"               # デバッグ用
+    healthcheck:
+      test: ["CMD-SHELL", "uv run python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+    depends_on:
+      db-e2e:
+        condition: service_healthy
+
+  frontend-e2e:
+    build: ./frontend
+    profiles: ["e2e"]
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    environment:
+      BACKEND_URL: http://backend-e2e:8000
+      NEXT_DIST_DIR: .next-e2e    # 開発用フロントの .next と衝突させない
+    ports:
+      - "3001:3000"               # デバッグ用
+    depends_on:
+      backend-e2e:
+        condition: service_healthy
+
   e2e:
     image: mcr.microsoft.com/playwright:v1.64.1-noble   # @playwright/test と同じバージョンにする
     profiles: ["e2e"]
@@ -56,11 +113,11 @@ services:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
     environment:
-      E2E_BASE_URL: http://frontend:3000
+      E2E_BASE_URL: http://frontend-e2e:3000
       CI: "${CI:-}"
     depends_on:
-      - frontend
-      - backend
+      frontend-e2e:
+        condition: service_started
 
 volumes:
   pgdata:

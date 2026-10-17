@@ -27,7 +27,7 @@ _SPACE_RE = re.compile(r"\s+")
 
 
 class MockEmbedder:
-    model_name = "mock-hashed-trigram"
+    model_name = "mock-hashed-ngram"
 
     def __init__(self, dim: int) -> None:
         self._dim = dim
@@ -37,8 +37,11 @@ class MockEmbedder:
         t = _SPACE_RE.sub(" ", text.lower()).strip()
         if not t:
             return []
-        grams = [t[i : i + 3] for i in range(max(len(t) - 2, 1))]
-        return grams + _WORD_RE.findall(t)
+        # 日本語は分かち書きが無いので、文字 2-gram と 3-gram を特徴にする
+        # (3-gram だけだと「の成長」と「成長を」が別の特徴になり、語の重なりを拾えない)
+        bigrams = [t[i : i + 2] for i in range(max(len(t) - 1, 1))]
+        trigrams = [t[i : i + 3] for i in range(max(len(t) - 2, 1))]
+        return bigrams + trigrams + _WORD_RE.findall(t)
 
     def embed_one(self, text: str) -> list[float]:
         vec = [0.0] * self._dim

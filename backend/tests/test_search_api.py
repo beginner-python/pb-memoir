@@ -26,7 +26,7 @@ async def test_cached_question_filters_by_date_range(client):
     assert data["date_range"] == {
         "from": "2025-06-01",
         "to": "2025-08-31",
-        "label": "去年の夏(2025年6月〜8月)",
+        "label": "去年の夏",
         "source": "cache",
         "as_of": "2026-10-16",
     }

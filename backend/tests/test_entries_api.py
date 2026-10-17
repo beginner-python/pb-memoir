@@ -27,7 +27,7 @@ async def test_create_stores_entry_and_chunks(client, session_factory):
     chunks = await _chunks(session_factory, created["id"])
     assert len(chunks) == 1
     assert chunks[0].content == "海に行った。子どもが初めて波に触れた。"
-    assert chunks[0].embedding_model == "mock-hashed-trigram"
+    assert chunks[0].embedding_model == "mock-hashed-ngram"
     assert len(chunks[0].embedding) == 1536
 
 

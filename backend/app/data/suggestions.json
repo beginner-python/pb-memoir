@@ -1,14 +1,13 @@
 {
   "generated_at": "2026-10-16",
-  "model": "manual",
-  "note": "フェーズ 2 では手書き。フェーズ 4 で OpenAI による抽出結果に置き換える",
+  "model": "gpt-4o-mini",
   "items": [
     {
       "question": "去年の夏、どこに出かけた?",
       "extraction": {
         "date_from": "2025-06-01",
         "date_to": "2025-08-31",
-        "label": "去年の夏(2025年6月〜8月)",
+        "label": "去年の夏",
         "semantic_query": "どこに出かけたか"
       }
     },
@@ -17,17 +16,17 @@
       "extraction": {
         "date_from": "2026-09-01",
         "date_to": "2026-09-30",
-        "label": "先月(2026年9月)",
-        "semantic_query": "どんな出来事があったか"
+        "label": "先月",
+        "semantic_query": "どんなことがあったか"
       }
     },
     {
-      "question": "今年の春、子どもはどんな成長をした?",
+      "question": "今年の春、水瀬はどんな成長をした?",
       "extraction": {
         "date_from": "2026-03-01",
         "date_to": "2026-05-31",
-        "label": "今年の春(2026年3月〜5月)",
-        "semantic_query": "子どもの成長"
+        "label": "今年の春",
+        "semantic_query": "水瀬はどんな成長をしたか"
       }
     },
     {
@@ -35,13 +34,22 @@
       "extraction": {
         "date_from": "2025-12-24",
         "date_to": "2025-12-25",
-        "label": "2025年のクリスマス(12月24日〜25日)",
+        "label": "2025年のクリスマス",
         "semantic_query": "クリスマスに何をしたか"
       }
     },
     {
       "question": "はじめて歩いたのはいつ?",
       "extraction": null
+    },
+    {
+      "question": "去年の誕生日はどう過ごした?",
+      "extraction": {
+        "date_from": "2025-01-01",
+        "date_to": "2025-12-31",
+        "label": "去年の誕生日",
+        "semantic_query": "誕生日をどう過ごしたか"
+      }
     }
   ]
 }

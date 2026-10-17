@@ -15,6 +15,7 @@ frontend/test-results/
 frontend/playwright-report/
 node_modules/
 .next/
+.next-e2e/
 out/
 *.tsbuildinfo
 next-env.d.ts

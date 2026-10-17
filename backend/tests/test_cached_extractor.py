@@ -57,4 +57,4 @@ def test_bundled_suggestions_file_loads():
     from app.config import get_settings
 
     ex = CachedDateExtractor(get_settings().suggestions_path)
-    assert len(ex.questions) == 5
+    assert len(ex.questions) == 6

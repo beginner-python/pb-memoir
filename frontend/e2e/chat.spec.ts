@@ -22,7 +22,7 @@ test("ホームの質問欄からチャットへ引き継ぎ、時期で絞っ�
 
   const log = page.locator("[role=log]:visible");
   // 回答文にも同じ文言が含まれるため、チップの要素に完全一致で絞る
-  await expect(log.getByText("去年の夏(2025年6月〜8月)", { exact: true })).toBeVisible();
+  await expect(log.getByText("去年の夏", { exact: true })).toBeVisible();
   await expect(log.getByText("LLM_PROVIDER=openai")).toBeVisible(); // 生成(モック)が完了
 
   await log.getByRole("button", { name: /根拠 \d+ 件/ }).click();
