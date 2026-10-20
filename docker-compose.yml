@@ -108,7 +108,8 @@ services:
     image: mcr.microsoft.com/playwright:v1.64.1-noble   # @playwright/test と同じバージョンにする
     profiles: ["e2e"]
     working_dir: /app
-    command: npx playwright test
+    # smoke プロジェクトはステージング向け(READ_ONLY=true 前提)なので除く
+    command: npx playwright test --project=desktop --project=mobile
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
