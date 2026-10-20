@@ -1,0 +1,37 @@
+name: Keepalive
+
+# 無料枠の休止対策。3 日ごとに Render(/health)と Supabase(REST)を叩く。
+#   Render:   15 分でスリープ(アクセスで復帰)。/health が DB に select 1 を発行する
+#   Supabase: 7 日間アクティビティが無いと一時停止し、手動復帰が必要。REST API 呼び出しで活動とみなされる
+# Repository variables: STAGING_FRONTEND_URL, PRODUCTION_FRONTEND_URL, SUPABASE_STAGING_URL, SUPABASE_PRODUCTION_URL
+# Secrets: SUPABASE_STAGING_ANON_KEY, SUPABASE_PRODUCTION_ANON_KEY
+
+on:
+  schedule:
+    - cron: "0 21 */3 * *" # UTC 21:00 = JST 06:00、3 日ごと
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Render via Vercel proxy (/api/health)
+        run: |
+          for url in "${{ vars.STAGING_FRONTEND_URL }}" "${{ vars.PRODUCTION_FRONTEND_URL }}"; do
+            [ -z "$url" ] && continue
+            echo "GET $url/api/health"
+            curl -fsS --retry 3 --retry-delay 20 --max-time 120 "$url/api/health" | jq .
+          done
+      - name: Supabase REST
+        env:
+          STAGING_KEY: ${{ secrets.SUPABASE_STAGING_ANON_KEY }}
+          PRODUCTION_KEY: ${{ secrets.SUPABASE_PRODUCTION_ANON_KEY }}
+        run: |
+          ping() { # $1=url $2=key
+            [ -z "$1" ] || [ -z "$2" ] && return 0
+            echo "GET $1/rest/v1/entries"
+            curl -fsS --max-time 30 "$1/rest/v1/entries?select=id&limit=1" \
+              -H "apikey: $2" -H "Authorization: Bearer $2" | head -c 200; echo
+          }
+          ping "${{ vars.SUPABASE_STAGING_URL }}" "$STAGING_KEY"
+          ping "${{ vars.SUPABASE_PRODUCTION_URL }}" "$PRODUCTION_KEY"

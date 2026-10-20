@@ -1,0 +1,40 @@
+name: Release
+
+# タグ v* を push すると、そのコミットに release ブランチを進める。
+# Vercel(Production Branch = release)と Render(pb-memoir)が release の更新を検知して本番にデプロイする。
+# 条件: タグのコミットが main の履歴上にあり、CI(backend / frontend / e2e)が成功していること。
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  checks: read
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ensure the tag is on main
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main \
+            || { echo "タグ $GITHUB_REF_NAME のコミットは main に含まれていません" >&2; exit 1; }
+      - name: Ensure CI passed for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for job in backend frontend e2e; do
+            c=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?check_name=$job" \
+                 --jq '[.check_runs[] | .conclusion] | first // "missing"')
+            echo "$job: $c"
+            [ "$c" = "success" ] || { echo "CI の $job が成功していません" >&2; exit 1; }
+          done
+      - name: Move release branch to the tag
+        run: |
+          git push origin "$GITHUB_SHA:refs/heads/release"
+          echo "release -> $GITHUB_SHA ($GITHUB_REF_NAME)"

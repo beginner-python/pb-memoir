@@ -1,0 +1,59 @@
+name: Smoke (staging)
+
+# main への push 後、Vercel(main のプレビュー)と Render(pb-memoir-staging)の両方が
+# この commit をデプロイし終えるのを待ってから、読み取り専用のスモークテストを実行する。
+# 必要な Repository variables: STAGING_FRONTEND_URL(例 https://pb-memoir-git-main-xxx.vercel.app)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-staging
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    if: vars.STAGING_FRONTEND_URL != ''
+    env:
+      FRONT: ${{ vars.STAGING_FRONTEND_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for the deployed commit
+        run: |
+          deadline=$((SECONDS + 1500))
+          while [ $SECONDS -lt $deadline ]; do
+            fe=$(curl -fsS --max-time 20 "$FRONT/api/version" | jq -r .commit || echo "")
+            be=$(curl -fsS --max-time 90 "$FRONT/api/health"  | jq -r .commit || echo "")
+            echo "frontend=$fe backend=$be want=$GITHUB_SHA"
+            if [ "$fe" = "$GITHUB_SHA" ] && [ "$be" = "$GITHUB_SHA" ]; then
+              echo "deployed"; exit 0
+            fi
+            sleep 30
+          done
+          echo "deploy did not complete in time" >&2; exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npx playwright test --project=smoke
+        working-directory: frontend
+        env:
+          SMOKE: "1"
+          E2E_BASE_URL: ${{ env.FRONT }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: smoke-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          if-no-files-found: ignore

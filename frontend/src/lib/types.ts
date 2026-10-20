@@ -6,6 +6,7 @@ export type Health = {
   llm_provider: "openai" | "mock";
   read_only: boolean;
   database: "ok" | "unavailable";
+  commit: string | null;
 };
 
 export type Entry = {

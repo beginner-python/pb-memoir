@@ -2,6 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,6 +33,15 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5434/memoir"
 
     cors_origins: str = "http://localhost:3000"
+
+    # Supabase の共有プーラーは同時接続数が少ないため、本番では小さく設定する
+    db_pool_size: int = 5
+    db_max_overflow: int = 10
+
+    # デプロイされたコミット。Render は RENDER_GIT_COMMIT を自動で設定する
+    git_commit: str | None = Field(
+        default=None, validation_alias=AliasChoices("GIT_COMMIT", "RENDER_GIT_COMMIT")
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:

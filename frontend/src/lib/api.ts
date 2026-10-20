@@ -55,8 +55,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** Render の休止からの復帰(30〜60 秒)で応答待ちのまま止まらないよう、短いタイムアウトで失敗させて再試行に回す */
+const HEALTH_TIMEOUT_MS = 8_000;
+
 export const api = {
-  health: () => request<Health>("/health"),
+  health: () => request<Health>("/health", { signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS) }),
 
   listEntries: (params: { from?: string; to?: string; limit?: number; offset?: number } = {}) => {
     const q = new URLSearchParams();

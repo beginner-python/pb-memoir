@@ -30,7 +30,7 @@ app.include_router(chat.router)
 
 
 @app.get("/health")
-async def health() -> dict[str, str | bool]:
+async def health() -> dict[str, str | bool | None]:
     try:
         async with engine.connect() as conn:
             await conn.execute(text("select 1"))
@@ -43,4 +43,5 @@ async def health() -> dict[str, str | bool]:
         "llm_provider": settings.llm_provider,
         "read_only": settings.read_only,
         "database": database,
+        "commit": settings.git_commit,
     }

@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// Docker の開発環境(docker compose up)に対して実行する。
-// 実行: docker compose --profile e2e run --rm e2e
+// ローカル / CI: docker compose --profile e2e run --rm e2e      (専用スタックに対して全テスト)
+// ステージング: SMOKE=1 E2E_BASE_URL=https://... npx playwright test --project=smoke
 const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 
 export default defineConfig({
@@ -23,8 +23,15 @@ export default defineConfig({
     {
       name: "desktop",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } },
-      testIgnore: /mobile\.spec\.ts/,
+      testIgnore: [/mobile\.spec\.ts/, /smoke\.spec\.ts/],
     },
     { name: "mobile", use: { ...devices["iPhone 13"] }, testMatch: /mobile\.spec\.ts/ },
+    {
+      // 読み取り専用のスモーク。ステージング(READ_ONLY=true)に対して実行する
+      name: "smoke",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } },
+      testMatch: /smoke\.spec\.ts/,
+      timeout: 120_000, // Render の休止からの復帰を見込む
+    },
   ],
 });
