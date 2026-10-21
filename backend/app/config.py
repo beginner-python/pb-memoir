@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     git_commit: str | None = Field(
         default=None, validation_alias=AliasChoices("GIT_COMMIT", "RENDER_GIT_COMMIT")
     )
+    # 稼働しているサービス名(staging / production の識別用)。
+    # Render は RENDER_SERVICE_NAME を自動で設定する
+    service_name: str | None = Field(
+        default=None, validation_alias=AliasChoices("SERVICE_NAME", "RENDER_SERVICE_NAME")
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:

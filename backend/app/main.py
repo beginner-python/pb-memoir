@@ -44,4 +44,5 @@ async def health() -> dict[str, str | bool | None]:
         "read_only": settings.read_only,
         "database": database,
         "commit": settings.git_commit,
+        "service": settings.service_name,
     }

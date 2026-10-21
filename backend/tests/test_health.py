@@ -7,3 +7,4 @@ async def test_health_reports_mode_and_commit(client, monkeypatch):
     assert data["read_only"] is False
     assert data["database"] == "ok"
     assert "commit" in data  # ローカルでは None、Render では RENDER_GIT_COMMIT
+    assert "service" in data  # ローカルでは None、Render では RENDER_SERVICE_NAME
