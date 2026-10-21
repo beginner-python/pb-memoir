@@ -7,6 +7,7 @@ export type Health = {
   read_only: boolean;
   database: "ok" | "unavailable";
   commit: string | null;
+  service: string | null;
 };
 
 export type Entry = {
