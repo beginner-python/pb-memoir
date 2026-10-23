@@ -27,12 +27,16 @@ jobs:
           STAGING_KEY: ${{ secrets.SUPABASE_STAGING_ANON_KEY }}
           PRODUCTION_KEY: ${{ secrets.SUPABASE_PRODUCTION_ANON_KEY }}
         run: |
+          failed=0
           ping() { # $1=url $2=key
             [ -z "$1" ] || [ -z "$2" ] && return 0
-            # 表は REST に公開していないため、API のルート(OpenAPI)を叩いて活動とみなしてもらう
-            echo "GET $1/rest/v1/"
+            # 表は REST に公開していないため、API のルート(OpenAPI)を叩いて活動とみなしてもらう。
             # 新形式の Publishable key は apikey ヘッダーだけで通る(Authorization は付けない)
-            curl -fsS --max-time 30 "$1/rest/v1/" -H "apikey: $2" | head -c 120; echo
+            echo "GET $1/rest/v1/"
+            code=$(curl -sS -o /tmp/body --max-time 30 -w '%{http_code}' "$1/rest/v1/" -H "apikey: $2")
+            echo "HTTP $code: $(head -c 160 /tmp/body)"
+            [ "$code" = "200" ] || failed=1
           }
           ping "${{ vars.SUPABASE_STAGING_URL }}" "$STAGING_KEY"
           ping "${{ vars.SUPABASE_PRODUCTION_URL }}" "$PRODUCTION_KEY"
+          [ "$failed" = "0" ] || { echo "Supabase への疎通に失敗しました" >&2; exit 1; }
