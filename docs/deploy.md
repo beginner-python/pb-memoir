@@ -50,7 +50,7 @@ Release ワークフローが `release` ブランチを作成します(Actions �
    ```
 
    `.env.production` でも同じ手順を行う
-5. keepalive 用に、各プロジェクトの **Project Settings → API** から **Project URL** と **anon public key** を控える
+5. keepalive 用に、各プロジェクトの **Project Settings → API Keys** から **Project URL** と **Publishable key**(`sb_publishable_...`。旧 anon key に相当。`sb_secret_...` は使わない)を控える
 
 RLS はマイグレーション `0002` で有効化済みのため、anon キーでは表を読み書きできません(バックエンドは `postgres` ロールで接続するため影響なし)。
 
@@ -96,8 +96,8 @@ Vercel のドメインが決まったら、Render の `CORS_ORIGINS` を `https:
 
 | 名前 | 値 |
 |---|---|
-| `SUPABASE_STAGING_ANON_KEY` | ステージングの anon key |
-| `SUPABASE_PRODUCTION_ANON_KEY` | 本番の anon key |
+| `SUPABASE_STAGING_ANON_KEY` | ステージングの Publishable key |
+| `SUPABASE_PRODUCTION_ANON_KEY` | 本番の Publishable key |
 
 **ブランチ保護**(Settings → Branches → `main`): PR 必須、必須チェックに `backend` `frontend` `e2e`。`release` は保護しない(Release ワークフローが更新する)。
 
@@ -114,4 +114,5 @@ Vercel のドメインが決まったら、Render の `CORS_ORIGINS` を `https:
 - 本番に出すときは `git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z`(Release ワークフローが `main` の祖先であること・CI 成功を確認してから `release` を進める)
 - 戻すときは前のタグで同じ操作(`release` がそのコミットに戻る)
 - 質問例のキャッシュ(`suggestions.json`)は「去年」「先月」の基準日が固定されるため、数か月に一度 `LLM_PROVIDER=openai` で `scripts.build_suggestions` を実行して更新する
-- Supabase の無料プロジェクトは 7 日間無操作で停止する。keepalive ワークフローが 3 日ごとに起こすが、停止してしまった場合はダッシュボードの **Restore** で復帰させる
+- Supabase の無料プロジェクトは 7 日間無操作で停止する。keepalive ワークフローが 3 日ごとに `/auth/v1/settings` を叩いて起こすが、停止してしまった場合はダッシュボードの **Restore** で復帰させる
+- Vercel の Deployment Protection(Vercel Authentication)は無効にしてある。有効だとステージングのプレビュー URL が Vercel のログインで保護され、来訪者・スモーク・keepalive が届かない
