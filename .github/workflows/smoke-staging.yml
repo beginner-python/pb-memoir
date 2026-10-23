@@ -22,14 +22,22 @@ jobs:
       FRONT: ${{ vars.STAGING_FRONTEND_URL }}
     steps:
       - uses: actions/checkout@v4
-      - name: Wait for the deployed commit
+        with:
+          fetch-depth: 0
+      - name: Wait for the deployed commits
+        # Vercel は frontend/ に、Render は backend/ に差分が無い push ではデプロイを飛ばす。
+        # そのため「main の最新」ではなく「各ディレクトリに最後に触れた(first-parent の)コミット」が
+        # デプロイされていることを待つ。
         run: |
+          want_fe=$(git log -1 --first-parent --format=%H -- frontend)
+          want_be=$(git log -1 --first-parent --format=%H -- backend)
+          echo "want frontend=$want_fe backend=$want_be (head=$GITHUB_SHA)"
           deadline=$((SECONDS + 1500))
           while [ $SECONDS -lt $deadline ]; do
             fe=$(curl -fsS --max-time 20 "$FRONT/api/version" | jq -r .commit || echo "")
             be=$(curl -fsS --max-time 90 "$FRONT/api/health"  | jq -r .commit || echo "")
-            echo "frontend=$fe backend=$be want=$GITHUB_SHA"
-            if [ "$fe" = "$GITHUB_SHA" ] && [ "$be" = "$GITHUB_SHA" ]; then
+            echo "frontend=$fe backend=$be"
+            if [ "$fe" = "$want_fe" ] && [ "$be" = "$want_be" ]; then
               echo "deployed"; exit 0
             fi
             sleep 30
