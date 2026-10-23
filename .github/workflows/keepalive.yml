@@ -4,7 +4,7 @@ name: Keepalive
 #   Render:   15 分でスリープ(アクセスで復帰)。/health が DB に select 1 を発行する
 #   Supabase: 7 日間アクティビティが無いと一時停止し、手動復帰が必要。REST API 呼び出しで活動とみなされる
 # Repository variables: STAGING_FRONTEND_URL, PRODUCTION_FRONTEND_URL, SUPABASE_STAGING_URL, SUPABASE_PRODUCTION_URL
-# Secrets: SUPABASE_STAGING_ANON_KEY, SUPABASE_PRODUCTION_ANON_KEY
+# Secrets: SUPABASE_STAGING_ANON_KEY, SUPABASE_PRODUCTION_ANON_KEY(Supabase の Publishable key。旧 anon key でも可)
 
 on:
   schedule:
@@ -31,8 +31,8 @@ jobs:
             [ -z "$1" ] || [ -z "$2" ] && return 0
             # 表は REST に公開していないため、API のルート(OpenAPI)を叩いて活動とみなしてもらう
             echo "GET $1/rest/v1/"
-            curl -fsS --max-time 30 "$1/rest/v1/" \
-              -H "apikey: $2" -H "Authorization: Bearer $2" | head -c 120; echo
+            # 新形式の Publishable key は apikey ヘッダーだけで通る(Authorization は付けない)
+            curl -fsS --max-time 30 "$1/rest/v1/" -H "apikey: $2" | head -c 120; echo
           }
           ping "${{ vars.SUPABASE_STAGING_URL }}" "$STAGING_KEY"
           ping "${{ vars.SUPABASE_PRODUCTION_URL }}" "$PRODUCTION_KEY"
