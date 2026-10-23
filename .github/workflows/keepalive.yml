@@ -30,10 +30,11 @@ jobs:
           failed=0
           ping() { # $1=url $2=key
             [ -z "$1" ] || [ -z "$2" ] && return 0
-            # 表は REST に公開していないため、API のルート(OpenAPI)を叩いて活動とみなしてもらう。
-            # 新形式の Publishable key は apikey ヘッダーだけで通る(Authorization は付けない)
-            echo "GET $1/rest/v1/"
-            code=$(curl -sS -o /tmp/body --max-time 30 -w '%{http_code}' "$1/rest/v1/" -H "apikey: $2")
+            # 表は REST に公開しておらず、/rest/v1/ のルートも新形式の Publishable key では 401 になる。
+            # 認証設定の公開エンドポイントは Publishable key で 200 を返し、API ゲートウェイを通るので
+            # これを活動とみなしてもらう
+            echo "GET $1/auth/v1/settings"
+            code=$(curl -sS -o /tmp/body --max-time 30 -w '%{http_code}' "$1/auth/v1/settings" -H "apikey: $2")
             echo "HTTP $code: $(head -c 160 /tmp/body)"
             [ "$code" = "200" ] || failed=1
           }
